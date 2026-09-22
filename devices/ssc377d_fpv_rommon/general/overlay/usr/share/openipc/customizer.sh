@@ -13,7 +13,7 @@ fw_setenv upgrade 'https://github.com/OpenIPC/builder/releases/download/latest/s
 cli -s .video0.size 1280x720
 cli -s .video0.fps 60
 cli -s .video0.bitrate 6144
-cli -s .video0.codec h265
+cli -s .video0.codec h264
 cli -s .video0.rcMode cbr
 cli -s .outgoing.wfb true
 cli -s .records.split 1
@@ -43,7 +43,7 @@ wifibroadcast cli -s .broadcast.link_id 7669206
 
 # wifibroadcast normally performs generic video setup on first start. Mark it
 # initialized only after applying the device-specific values above so it will
-# not replace 1280x720/H.265/6144 with its generic IMX335 profile.
+# not replace 1280x720/H.264/6144 with its generic IMX335 profile.
 touch /etc/system.ok
 
 # Keep adaptive-link enabled as in the previously working FPV image.
