@@ -3,8 +3,7 @@
 # SSC377D FPV first-boot configuration
 #
 # Keep the image aligned with the working PixelPilot/WFB setup while avoiding
-# wifibroadcast's generic first-boot video_settings() override (which restores
-# IMX335 to 1920x1440@60 and 8000 kbit/s).
+# wifibroadcast's generic first-boot video_settings() override.
 #
 fw_setenv upgrade 'https://github.com/OpenIPC/builder/releases/download/latest/ssc377d_fpv.tgz'
 
@@ -19,10 +18,13 @@ cli -s .records.split 1
 cli -s .records.notime true
 cli -s .fpv.enabled true
 
-# Match the current SigmaStar FPV WFB sensor setup.
-sensor=$(ipcinfo -s)
-family=$(ipcinfo -f)
-cli -s .isp.sensorConfig /etc/sensors/"$sensor"_"$family".bin
+# Greg Sparks IMX335 FPV ISP profile.
+# OpenIPC ships this profile as imx335_greg15.bin and exposes it in the FPV
+# camera menu. The newer waybeam Greg FPV VII profile is documented for
+# Star6E/SSC338Q; we deliberately use the packaged Greg15 profile here because
+# it is an actual released binary from OpenIPC/sensor-profiles and is not tied
+# to the SSC338Q/waybeam test target.
+cli -s .isp.sensorConfig /etc/sensors/imx335_greg15.bin
 cli -s .isp.exposure 16
 
 # Preserve the known-working RTL8812AU/WFB parameters.
@@ -40,9 +42,9 @@ wifibroadcast cli -s .broadcast.stbc 1
 wifibroadcast cli -s .broadcast.ldpc 1
 wifibroadcast cli -s .broadcast.link_id 7669206
 
-# wifibroadcast normally performs the generic video setup on the first start.
-# Mark it initialized only after applying the device-specific values above,
-# so it will not replace 1280x720/H.265/6144 with its generic IMX335 profile.
+# wifibroadcast normally performs generic video setup on first start. Mark it
+# initialized only after applying the device-specific values above so it will
+# not replace 1280x720/H.265/6144 with its generic IMX335 profile.
 touch /etc/system.ok
 
 # Keep adaptive-link enabled as in the previously working FPV image.
