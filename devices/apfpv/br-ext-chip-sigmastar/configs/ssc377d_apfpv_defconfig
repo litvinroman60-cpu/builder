@@ -71,6 +71,7 @@ BR2_PACKAGE_OPUS_OPENIPC_FIXED_POINT=y
 # Do not select rtl8812au-openipc together with rtl8812au: both packages
 # build a module named 8812au and the AP helper expects this implementation.
 BR2_PACKAGE_RTL8812AU=y
+BR2_PACKAGE_RTL8812EU=y
 BR2_PACKAGE_SIGMASTAR_OSDRV_INFINITY6C=y
 BR2_PACKAGE_VTUND_OPENIPC=y
 BR2_PACKAGE_YAML_CLI=y
