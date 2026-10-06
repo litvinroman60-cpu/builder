@@ -153,6 +153,17 @@ copy_extra_packages
 echo_c 33 "\nCopying device files"
 cp -afv ${BUILDER_DIR}/${ITEM}/* ${FIRMWARE_DIR}
 
+# APFPV does not use curl LDAP/LDAPS support. curl 8.15.0 can enable these
+# protocol options from its Kconfig default even when the board defconfig
+# requests them off. The target image has no LDAP libraries, so keep these
+# protocols disabled for this board rather than adding an unused LDAP stack.
+if [ "${DEVICE}" = "ssc377d_apfpv" ]; then
+    LIBCURL_MK="${FIRMWARE_DIR}/general/package/libcurl-openipc/libcurl-openipc.mk"
+    if [ -f "${LIBCURL_MK}" ]; then
+        printf "\n# builder: APFPV does not need LDAP/LDAPS in libcurl.\nLIBCURL_OPENIPC_CONF_OPTS += --disable-ldap --disable-ldaps\n" >> "${LIBCURL_MK}"
+    fi
+fi
+
 echo_c 33 "\nBuilding the device"
 # Propagate make's status. Without this the script ALWAYS exits 0: the result is
 # discarded, copy_to_archive then runs over an empty output/images and still
