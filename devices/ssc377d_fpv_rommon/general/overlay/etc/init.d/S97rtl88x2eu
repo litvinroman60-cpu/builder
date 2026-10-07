@@ -1,0 +1,31 @@
+#!/bin/sh
+#
+# SSC377D FPV: preload RTL88x2EU driver before wifibroadcast.
+#
+# OpenIPC's wifibroadcast currently identifies USB VID:PID 0bda:a81a
+# as "8812eu", while rtl88x2eu builds may expose the module as 88x2eu.
+# Preload whichever module is actually present. Once wlan0 exists, the
+# standard wifibroadcast service leaves driver loading alone.
+#
+
+case "$1" in
+    start)
+        if lsusb | grep -q '0bda:a81a'; then
+            if [ -e /sys/class/net/wlan0 ]; then
+                exit 0
+            fi
+
+            for driver in 8812eu 88x2eu rtl88x2eu_ohd; do
+                if modprobe "$driver" \
+                    rtw_tx_pwr_by_rate=0 \
+                    rtw_tx_pwr_lmt_enable=0 \
+                    MaxTxBufLen=32 2>/dev/null; then
+                    echo "RTL88x2EU: loaded $driver"
+                    break
+                fi
+            done
+        fi
+        ;;
+esac
+
+exit 0
