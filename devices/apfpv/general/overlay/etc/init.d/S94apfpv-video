@@ -1,0 +1,22 @@
+#!/bin/sh
+
+case "$1" in
+	start)
+		if command -v cli >/dev/null 2>&1; then
+			echo "Configuring APFPV video: H.265 1280x720@30"
+			cli -s .video0.enabled true
+			cli -s .video0.codec h265
+			cli -s .video0.size 1280x720
+			cli -s .video0.fps 30
+			cli -s .video1.enabled false
+		fi
+		;;
+
+	stop)
+		;;
+
+	*)
+		echo "Usage: $0 {start|stop}"
+		exit 1
+		;;
+esac
