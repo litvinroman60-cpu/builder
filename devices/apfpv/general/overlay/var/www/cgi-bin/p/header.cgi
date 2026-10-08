@@ -28,6 +28,7 @@ Pragma: no-cache
 						<a aria-expanded="false" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" id="dropdownInformation" role="button">Information</a>
 						<ul aria-labelledby="dropdownInformation" class="dropdown-menu">
 							<li><a class="dropdown-item" href="status.cgi">Status</a></li>
+							<li><a class="dropdown-item" href="apfpv-settings.cgi">APFPV Radio &amp; Telemetry</a></li>
 							<li><hr class="dropdown-divider"></li>
 							<li><a class="dropdown-item" href="info-majestic.cgi">Majestic</a></li>
 							<li><a class="dropdown-item" href="info-kernel.cgi">Kernel</a></li>

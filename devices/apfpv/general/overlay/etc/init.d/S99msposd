@@ -10,7 +10,14 @@ case "$1" in
 			size=1280x720
 			echo "Warning: could not read video0.size; using $size for MSPOSD layout"
 		fi
-		msposd -b 115200 -c 8 -r 20 -m /dev/ttyS2 -z "$size" -s > /tmp/msposd.log 2>&1 &
+		port=/dev/ttyS2
+		baud=115200
+		if [ -r /etc/apfpv-msposd.conf ]; then
+			. /etc/apfpv-msposd.conf
+		fi
+		case "$port" in /dev/ttyS0|/dev/ttyS1|/dev/ttyS2) ;; *) port=/dev/ttyS2 ;; esac
+		case "$baud" in 9600|19200|38400|57600|115200) ;; *) baud=115200 ;; esac
+		msposd -b "$baud" -c 8 -r 20 -m "$port" -z "$size" -s > /tmp/msposd.log 2>&1 &
 		;;
 
 	stop)
