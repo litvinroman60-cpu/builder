@@ -6,7 +6,11 @@ case "$1" in
 		devmem 0x1F207890 16 0x8
 		sleep 1
 		size=$(curl -s localhost/api/v1/config.json | jsonfilter -qe "@.video0.size")
-		msposd -b 115200 -c 8 -r 20 -m /dev/ttyS2 -z "$size" > /dev/null &
+		if [ -z "$size" ]; then
+			size=1280x720
+			echo "Warning: could not read video0.size; using $size for MSPOSD layout"
+		fi
+		msposd -b 115200 -c 8 -r 20 -m /dev/ttyS2 -z "$size" -s > /tmp/msposd.log 2>&1 &
 		;;
 
 	stop)
