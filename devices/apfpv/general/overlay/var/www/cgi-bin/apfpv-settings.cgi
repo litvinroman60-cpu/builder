@@ -12,7 +12,7 @@ read_post() {
 }
 
 field() {
-    printf '%s\n' "$POST_DATA" | tr '&' '\n' | sed -n "s/^$1=//p" | head -n 1
+    printf '%s\n' "$POST_DATA" | tr '&' '\012' | awk -F= -v key="$1" '$1 == key { sub(/^[^=]*=/, ""); print; exit }'
 }
 
 valid_freq() {
