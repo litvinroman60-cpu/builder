@@ -1,29 +1,61 @@
 #!/bin/sh
 #
-# SSC377D FPV: preload RTL88x2EU driver before wifibroadcast.
+# SSC377D FPV: select/preload the USB Wi-Fi driver before S98datalink.
+# Test one adapter at a time. OpenIPC's WFB detector uses these USB IDs:
+#   RTL8812AU family: 0bda:8812, 0bda:881a, 0b05:17d2, 2357:0101, 2604:0012
+#   RTL8812EU family: 0bda:a81a (BL-M8812EU2)
 #
-# OpenIPC's wifibroadcast currently identifies USB VID:PID 0bda:a81a
-# as "8812eu", while rtl88x2eu builds may expose the module as 88x2eu.
-# Preload whichever module is actually present. Once wlan0 exists, the
-# standard wifibroadcast service leaves driver loading alone.
-#
+# Driver module names differ between package/source revisions, so try known
+# names before WFB starts. WFB-NG remains responsible for video, tunnel and
+# MSP telemetry startup.
 
 case "$1" in
     start)
-        if lsusb | grep -q '0bda:a81a'; then
-            if [ -e /sys/class/net/wlan0 ]; then
+        cards="$(lsusb 2>/dev/null | awk '{print $6}')"
+        case "$cards" in
+            *0bda:a81a*)
+                family=eu
+                modules="8812eu 88x2eu rtl88x2eu_ohd"
+                adapter=bl-m8812eu2
+                txpower=40
+                ;;
+            *0bda:8812*|*0bda:881a*|*0b05:17d2*|*2357:0101*|*2604:0012*)
+                family=au
+                modules="88XXau 8812au rtl8812au"
+                adapter=bl-r8812af1
+                txpower=20
+                ;;
+            *)
                 exit 0
-            fi
+                ;;
+        esac
 
-            for driver in 8812eu 88x2eu rtl88x2eu_ohd; do
-                if modprobe "$driver" \
-                    rtw_tx_pwr_by_rate=0 \
-                    rtw_tx_pwr_lmt_enable=0 \
-                    MaxTxBufLen=32 2>/dev/null; then
-                    echo "RTL88x2EU: loaded $driver"
-                    break
+        # Set the adapter profile on every boot, even when system.ok exists.
+        if command -v wifibroadcast >/dev/null 2>&1; then
+            wifibroadcast cli -s .wireless.wlan_adapter "$adapter" >/dev/null 2>&1 || true
+            wifibroadcast cli -s .wireless.txpower "$txpower" >/dev/null 2>&1 || true
+            wifibroadcast cli -s .broadcast.stbc 1 >/dev/null 2>&1 || true
+            wifibroadcast cli -s .broadcast.ldpc 1 >/dev/null 2>&1 || true
+        fi
+
+        [ -e /sys/class/net/wlan0 ] && exit 0
+
+        for driver in $modules; do
+            if modprobe "$driver" \
+                rtw_tx_pwr_by_rate=0 \
+                rtw_tx_pwr_lmt_enable=0 \
+                MaxTxBufLen=32 2>/dev/null; then
+                echo "RTL8812${family}: loaded module $driver"
+                if [ -e /sys/class/net/wlan0 ]; then
+                    exit 0
                 fi
-            done
+                # Module loaded but no interface appeared; don't claim Wi-Fi is ready.
+                break
+            fi
+        done
+
+        if [ ! -e /sys/class/net/wlan0 ]; then
+            echo "WARNING: RTL8812${family} detected, but wlan0 was not created"
         fi
         ;;
 esac
