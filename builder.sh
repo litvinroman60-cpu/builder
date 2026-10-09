@@ -127,25 +127,21 @@ echo_c 33 "\nUpdating Builder"
 git pull
 
 rm -rf openipc
-# OPENIPC_FW_REV pins firmware to a specific ref (branch, tag, or SHA) for
-# cross-repo bisect of size/regression issues — set by build-one.yml's
-# firmware_ref input. When unset, clones HEAD of master as before.
-if [ ! -d "$FIRMWARE_DIR" ]; then
+# OPENIPC_FW_REPO can point to a fork; OPENIPC_FW_REV can pin a branch, tag, or SHA.
+# Defaults preserve the upstream OpenIPC/firmware behavior.
+OPENIPC_FW_REPO="${OPENIPC_FW_REPO:-OpenIPC/firmware}"
+if [ -n "$OPENIPC_FW_REV" ] || [ "$OPENIPC_FW_REPO" != "OpenIPC/firmware" ]; then
+    echo_c 33 "\nDownloading Firmware from ${OPENIPC_FW_REPO}"
+    git clone "https://github.com/${OPENIPC_FW_REPO}.git" "$FIRMWARE_DIR"
     if [ -n "$OPENIPC_FW_REV" ]; then
-        echo_c 33 "\nDownloading Firmware @ ${OPENIPC_FW_REV}"
-        git clone https://github.com/OpenIPC/firmware.git "$FIRMWARE_DIR"
+        echo_c 33 "\nChecking out Firmware @ ${OPENIPC_FW_REV}"
         git -C "$FIRMWARE_DIR" checkout "$OPENIPC_FW_REV"
-    else
-        echo_c 33 "\nDownloading Firmware"
-        git clone --depth=1 https://github.com/OpenIPC/firmware.git "$FIRMWARE_DIR"
     fi
-    cd "$FIRMWARE_DIR"
 else
-    echo_c 33 "\nUpdating Firmware"
-    cd "$FIRMWARE_DIR"
-    # git reset HEAD --hard
-    # git pull --rebase
+    echo_c 33 "\nDownloading Firmware"
+    git clone --depth=1 "https://github.com/${OPENIPC_FW_REPO}.git" "$FIRMWARE_DIR"
 fi
+cd "$FIRMWARE_DIR"
 
 echo_c 33 "\nCopying extra packages"
 copy_extra_packages
@@ -165,21 +161,7 @@ if [ "${DEVICE}" = "ssc377d_apfpv" ]; then
 fi
 
 echo_c 33 "\nBuilding the device"
-# Propagate make's status. Without this the script ALWAYS exits 0: the result is
-# discarded, copy_to_archive then runs over an empty output/images and still
-# prints "Assembled firmware available in:", and the caller sees success over an
-# empty directory.
-#
-# The expensive consequence is in CI. master.yml calls this inside a retry loop
-# written as `bash builder.sh ${NAME} && break`, wrapped in a six-step backoff
-# meant to absorb transient toolchain and CDN flakes. A script that cannot fail
-# breaks on the first attempt, so the budget never retried anything and the
-# `exit 1` after the loop was unreachable — a genuinely failed build reported
-# green instead of being re-attempted.
-#
-# Explicit rather than `set -e` at the top: this script does a lot of unguarded
-# cp/rm/cd, and enabling errexit globally would change failure behaviour well
-# beyond this line.
+# Propagate make's status. Without set -e, a failed build could be reported as success.
 make BOARD=${DEVICE}
 BUILD_RC=$?
 if [ ${BUILD_RC} -ne 0 ]; then
@@ -187,9 +169,7 @@ if [ ${BUILD_RC} -ne 0 ]; then
     exit ${BUILD_RC}
 fi
 
-# Best-effort: emit per-package/per-kernel-module size JSON next to the .tgz.
-# Target lives in firmware's Makefile (PR #2166); ignore failure so legacy
-# pinned firmware refs without the target don't sink the build.
+# Best-effort size report; older firmware refs may not have this target.
 make BOARD=${DEVICE} size-report || true
 
 copy_to_archive
