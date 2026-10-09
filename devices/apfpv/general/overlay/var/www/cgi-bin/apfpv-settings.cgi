@@ -22,7 +22,15 @@ valid_power() {
     case "$1" in 500|750|1000|1250|1500|1750|2000) return 0 ;; *) return 1 ;; esac
 }
 valid_port() {
-    case "$1" in /dev/ttyS0|/dev/ttyS1|/dev/ttyS2) return 0 ;; *) return 1 ;; esac
+    case "$1" in /dev/ttyS0|/dev/ttyS1|/dev/ttyS2|%2Fdev%2FttyS0|%2Fdev%2FttyS1|%2Fdev%2FttyS2) return 0 ;; *) return 1 ;; esac
+}
+normalize_port() {
+    case "$1" in
+        %2Fdev%2FttyS0) printf /dev/ttyS0 ;;
+        %2Fdev%2FttyS1) printf /dev/ttyS1 ;;
+        %2Fdev%2FttyS2) printf /dev/ttyS2 ;;
+        *) printf %s "$1" ;;
+    esac
 }
 valid_baud() {
     case "$1" in 9600|19200|38400|57600|115200) return 0 ;; *) return 1 ;; esac
@@ -46,6 +54,7 @@ if [ "${REQUEST_METHOD:-GET}" = "POST" ]; then
     new_power=$(field power)
     new_port=$(field port)
     new_baud=$(field baud)
+    new_port=$(normalize_port "$new_port")
     if [ "$action" = save ]; then
         if valid_freq "$new_freq" && valid_power "$new_power" && valid_port "$new_port" && valid_baud "$new_baud"; then
             if command -v fw_setenv >/dev/null 2>&1; then
