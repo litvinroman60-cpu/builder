@@ -11,7 +11,7 @@ case "$1" in
 		fi
 
 		echo "Starting standalone msposd..."
-		devmem 0x1F207890 16 0x8
+		devmem 0x1F2079B8 16 0x1000
 		sleep 1
 
 		size=$(curl -s localhost/api/v1/config.json | jsonfilter -qe "@.video0.size")
@@ -35,7 +35,8 @@ case "$1" in
 			*) baud=115200 ;;
 		esac
 
-		msposd -b "$baud" -c 8 -r 20 -m "$port" -z "$size" -s > /tmp/msposd.log 2>&1 &
+		[ -r /usr/share/fonts/font_btfl_hd.png ] && ln -sf /usr/share/fonts/font_btfl_hd.png /usr/bin/font_hd.png
+		msposd -b "$baud" -r 20 -m "$port" -z 1280x720 -d -a 1 -x 1 > /tmp/msposd.log 2>&1 &
 		;;
 
 	stop)
