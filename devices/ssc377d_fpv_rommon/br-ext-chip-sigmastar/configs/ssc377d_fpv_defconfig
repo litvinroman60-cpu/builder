@@ -66,8 +66,9 @@ BR2_PACKAGE_MSPOSD=y
 BR2_PACKAGE_OPUS_OPENIPC=y
 BR2_PACKAGE_OPUS_OPENIPC_FIXED_POINT=y
 # Keep both USB Wi-Fi families available for one-adapter-at-a-time testing.
-# APFPV uses the standard 8812au module package; EU is provided by rtl88x2eu-openipc.
-BR2_PACKAGE_RTL8812AU=y
+# Use the patched FPV-capable AU driver (monitor mode + packet injection).
+# EU remains available through rtl88x2eu-openipc for one-adapter-at-a-time tests.
+BR2_PACKAGE_RTL8812AU_OPENIPC=y
 BR2_PACKAGE_RTL88X2EU_OPENIPC=y
 BR2_PACKAGE_SIGMASTAR_OSDRV_INFINITY6C=y
 BR2_PACKAGE_VTUND_OPENIPC=y
