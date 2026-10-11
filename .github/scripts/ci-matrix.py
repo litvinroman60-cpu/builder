@@ -150,7 +150,26 @@ class Tree:
             self.directory_of[target] = "/".join(relative.split("/")[:2])
             self.traits_of[target] = self._traits(path)
         self.built = sorted(t for t in self.directory_of if t not in NOT_BUILT)
-        self.smoke = [t for t in self.built if t in set(SMOKE_TARGETS)]
+
+        # Keep curated smoke targets where they still cover the tree, but add
+        # targets for newly introduced build traits and shared device directories.
+        # This prevents device additions from making CI-plumbing PRs fail self-test.
+        smoke = {t for t in SMOKE_TARGETS if t in self.built}
+        all_traits = set().union(*(self.traits_of[t] for t in self.built))
+        for trait in sorted(all_traits):
+            if not any(trait in self.traits_of[t] for t in smoke):
+                candidates = [t for t in self.built if trait in self.traits_of[t]]
+                if candidates:
+                    smoke.add(candidates[0])
+        shared = sorted({self.directory_of[t] for t in self.built
+                         if len([x for x in self.built
+                                 if self.directory_of[x] == self.directory_of[t]]) > 1})
+        for directory in shared:
+            if not any(self.directory_of[t] == directory for t in smoke):
+                candidates = [t for t in self.built if self.directory_of[t] == directory]
+                if candidates:
+                    smoke.add(candidates[0])
+        self.smoke = sorted(smoke)
 
     def _traits(self, path):
         with open(path) as handle:
