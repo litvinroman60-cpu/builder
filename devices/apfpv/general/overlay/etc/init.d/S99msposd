@@ -2,8 +2,8 @@
 
 case "$1" in
 	start)
-		# On APFPV, wifibroadcast starts msposd when router: msposd is
-		# selected. Do not start a second process on the same UART.
+		# When telemetry is configured for MSPOSD, wifibroadcast owns
+		# the process. Do not start a second instance on the same UART.
 		if [ -x /usr/bin/wifibroadcast ] && [ -r /etc/wfb.yaml ] &&
 			grep -q '^[[:space:]]*router:[[:space:]]*msposd[[:space:]]*$' /etc/wfb.yaml; then
 			echo "MSPOSD is managed by wifibroadcast; skipping duplicate instance"
@@ -16,7 +16,7 @@ case "$1" in
 
 		size=$(curl -s localhost/api/v1/config.json | jsonfilter -qe "@.video0.size")
 		if [ -z "$size" ]; then
-			size=1280x720
+			size=1920x1080
 			echo "Warning: could not read video0.size; using $size for MSPOSD layout"
 		fi
 
@@ -35,8 +35,19 @@ case "$1" in
 			*) baud=115200 ;;
 		esac
 
-		[ -r /usr/share/fonts/font_btfl_hd.png ] && ln -sf /usr/share/fonts/font_btfl_hd.png /usr/bin/font_hd.png
-		msposd -b "$baud" -r 20 -m "$port" -z 1280x720 -d -a 1 -x 1 > /tmp/msposd.log 2>&1 &
+		# Use the font matrix that matches the configured video size.
+		# Keep AHI disabled: it is a graphical layer, not text OSD.
+		case "$size" in
+			1280x720)
+				matrix=1
+				[ -r /usr/share/fonts/font_btfl_hd.png ] && ln -sf /usr/share/fonts/font_btfl_hd.png /usr/bin/font_hd.png
+				;;
+			*)
+				matrix=0
+				;;
+		esac
+
+		msposd -b "$baud" -r 20 -m "$port" -z "$size" -d -x "$matrix" > /tmp/msposd.log 2>&1 &
 		;;
 
 	stop)
