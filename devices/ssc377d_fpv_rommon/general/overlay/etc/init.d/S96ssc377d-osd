@@ -1,0 +1,25 @@
+#!/bin/sh
+#
+# SSC377D FPV: prepare UART2/MSPOSD before S98wifibroadcast starts.
+# UART2 pinmux must be set before msposd opens /dev/ttyS2.
+#
+case "$1" in
+    start)
+        if command -v devmem >/dev/null 2>&1; then
+            devmem 0x1F2079B8 16 0x1000
+            echo "SSC377D FPV: UART2 pinmux configured for MSPOSD"
+        else
+            echo "WARNING: devmem is unavailable; UART2 pinmux was not configured"
+        fi
+
+        # MSPOSD's legacy font lookup expects font_hd.png in /usr/bin.
+        # Keep the canonical Betaflight HD font from the package.
+        if [ -s /usr/share/fonts/font_btfl_hd.png ]; then
+            ln -sf /usr/share/fonts/font_btfl_hd.png /usr/bin/font_hd.png
+        else
+            echo "WARNING: Betaflight HD font /usr/share/fonts/font_btfl_hd.png is missing"
+        fi
+        ;;
+esac
+
+exit 0

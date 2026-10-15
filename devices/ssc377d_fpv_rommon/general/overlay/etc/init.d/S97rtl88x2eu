@@ -38,13 +38,30 @@ case "$1" in
             wifibroadcast cli -s .broadcast.ldpc 1 >/dev/null 2>&1 || true
         fi
 
-        [ -e /sys/class/net/wlan0 ] && exit 0
+        # A USB hotplug alias may have loaded a generic driver before this
+        # script. Keep it only if the wireless stack advertises monitor mode,
+        # which WFB-NG requires. Otherwise try to replace that module.
+        if [ -e /sys/class/net/wlan0 ]; then
+            if iw list 2>/dev/null | grep -q '[*] monitor'; then
+                echo "RTL8812${family}: wlan0 exists and monitor mode is advertised"
+                exit 0
+            fi
+
+            current_module="$(basename "$(readlink -f /sys/class/net/wlan0/device/driver/module 2>/dev/null)")"
+            if [ -n "$current_module" ]; then
+                echo "RTL8812${family}: monitor mode missing; trying to replace module $current_module"
+                ip link set wlan0 down 2>/dev/null || true
+                if ! modprobe -r "$current_module" 2>/dev/null; then
+                    echo "WARNING: cannot unload $current_module; WFB monitor mode may remain unavailable"
+                    exit 0
+                fi
+            fi
+        fi
 
         for driver in $modules; do
             if modprobe "$driver" \
                 rtw_tx_pwr_by_rate=0 \
-                rtw_tx_pwr_lmt_enable=0 \
-                MaxTxBufLen=32 2>/dev/null; then
+                rtw_tx_pwr_lmt_enable=0 2>/dev/null; then
                 echo "RTL8812${family}: loaded module $driver"
                 if [ -e /sys/class/net/wlan0 ]; then
                     exit 0
@@ -56,6 +73,8 @@ case "$1" in
 
         if [ ! -e /sys/class/net/wlan0 ]; then
             echo "WARNING: RTL8812${family} detected, but wlan0 was not created"
+        elif ! iw list 2>/dev/null | grep -q '[*] monitor'; then
+            echo "WARNING: RTL8812${family}: wlan0 exists, but monitor mode is not advertised"
         fi
         ;;
 esac

@@ -17,5 +17,6 @@ if [ ! -s "$SENSORS_DIR/imx335.bin" ]; then
     echo "WARNING: /etc/sensors/imx335.bin is not present in the target rootfs" >&2
 fi
 
-# The FPV Wi-Fi preload script must run before OpenIPC S98datalink/wifibroadcast.
+# UART2 pinmux/font setup and FPV Wi-Fi preload must run before S98wifibroadcast.
+chmod 0755 "$TARGET_DIR/etc/init.d/S96ssc377d-osd"
 chmod 0755 "$TARGET_DIR/etc/init.d/S97rtl88x2eu"
