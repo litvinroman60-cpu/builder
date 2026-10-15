@@ -9,9 +9,9 @@ on:
         description: 'Builder commit SHA to build (optional; defaults to current branch HEAD). Use this from git bisect or for one-off historic rebuilds.'
         required: false
       firmware_repo:
-        description: 'Firmware repository in owner/name format (defaults to OpenIPC/firmware).'
+        description: 'Firmware repository in owner/name format (defaults to this project fork).'
         required: false
-        default: 'OpenIPC/firmware'
+        default: 'litvinroman60-cpu/firmware'
       firmware_ref:
         description: 'Firmware branch, tag, or commit SHA (optional; defaults to repository HEAD).'
         required: false
