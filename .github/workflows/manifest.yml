@@ -37,10 +37,32 @@ jobs:
           path: master
 
       - name: Checkout gh-pages (for output)
+        id: checkout_pages
         uses: actions/checkout@v4
+        continue-on-error: true
         with:
           ref: gh-pages
           path: pages
+
+      # Forks and new mirrors may not have a gh-pages branch yet. Bootstrap an
+      # empty orphan branch instead of failing before manifest generation.
+      - name: Initialize gh-pages when absent
+        if: steps.checkout_pages.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          rm -rf pages
+          mkdir pages
+          cd pages
+          git init -b gh-pages
+          git config user.email "actions@github.com"
+          git config user.name "github-actions[bot]"
+          touch .nojekyll
+          git add .nojekyll
+          git commit -m "Initialize gh-pages"
+          git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push -u origin gh-pages
 
       - name: Generate manifest
         env:
