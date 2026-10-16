@@ -47,7 +47,22 @@ case "$1" in
 				;;
 		esac
 
-		msposd -b "$baud" -r 20 -m "$port" -z "$size" -d -x "$matrix" > /tmp/msposd.log 2>&1 &
+		# Record the resolved APFPV settings separately; msposd owns /tmp/msposd.log.
+		{
+			echo "APFPV MSPOSD startup: $(date)"
+			echo "video_size=$size matrix=$matrix uart=$port baud=$baud"
+			for font in /usr/share/fonts/font_btfl.png /usr/share/fonts/font_btfl_hd.png; do
+				if [ -r "$font" ]; then
+					ls -l "$font"
+				else
+					echo "WARNING: font missing or unreadable: $font"
+				fi
+			done
+		} > /tmp/msposd-startup.log 2>&1
+
+		# This build expects the font option and matrix as separate arguments.
+		# Keep this change in the APFPV overlay; the standalone FPV target is untouched.
+		msposd -b "$baud" -r 20 -m "$port" -z "$size" -d -x 11 "$matrix" > /tmp/msposd.log 2>&1 &
 		;;
 
 	stop)
