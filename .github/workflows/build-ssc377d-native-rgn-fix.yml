@@ -15,14 +15,9 @@ jobs:
     steps:
       - id: r
         run: |
-          REF=""""
-          [ -z "$REF" ] && REF="${{ github.sha }}"
+          REF="${{ github.sha }}"
           SHORT="$(printf '%s' "$REF" | cut -c1-7)"
-          if [ -n """" ]; then
-            TAG="nightly-bisect-${SHORT}"
-          else
-            TAG="nightly-bisect-${SHORT}-$(date -u +%Y%m%d%H%M%S)"
-          fi
+          TAG="ssc377d-native-rgn-fix-${SHORT}-$(date -u +%Y%m%d%H%M%S)"
           echo "ref=$REF"               >> "$GITHUB_OUTPUT"
           echo "short_sha=$SHORT"       >> "$GITHUB_OUTPUT"
           echo "tag_name=$TAG"          >> "$GITHUB_OUTPUT"
