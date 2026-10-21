@@ -2,7 +2,7 @@ name: build-ssc377d-native-rgn-fix
 on:
   push:
     branches:
-      - test/ssc377d-native-rgn-fix
+      - master
 
 jobs:
   resolve:
@@ -65,7 +65,7 @@ jobs:
           BUILD_SHA:      ${{ needs.resolve.outputs.ref }}
           BUILD_PLATFORM: ssc377d_apfpv
           OPENIPC_FW_REPO: litvinroman60-cpu/firmware
-          OPENIPC_FW_REV:  test/ssc377d-native-rgn-fix
+          OPENIPC_FW_REV: master
         run: |
           export GIT_HASH=$(git rev-parse --short ${GITHUB_SHA})
           export GIT_BRANCH=${GITHUB_REF_NAME}
@@ -129,9 +129,9 @@ jobs:
           body: |
             builder_sha=${{ needs.resolve.outputs.ref }}
             firmware_repo=litvinroman60-cpu/firmware
-            firmware_ref=test/ssc377d-native-rgn-fix
+            firmware_ref=master
             platform=ssc377d_apfpv
-            one_off=true
+            one_off=false
           files: |
             ${{env.NORFW}}
             ${{env.NANDFW}}
