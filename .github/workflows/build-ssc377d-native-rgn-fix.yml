@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - master
+      - test/osd-control-apfpv
 
 jobs:
   resolve:
@@ -65,7 +66,7 @@ jobs:
           BUILD_SHA:      ${{ needs.resolve.outputs.ref }}
           BUILD_PLATFORM: ssc377d_apfpv
           OPENIPC_FW_REPO: litvinroman60-cpu/firmware
-          OPENIPC_FW_REV: master
+          OPENIPC_FW_REV: ${{ github.ref_name == 'test/osd-control-apfpv' && 'test/osd-control-apfpv' || 'master' }}
         run: |
           export GIT_HASH=$(git rev-parse --short ${GITHUB_SHA})
           export GIT_BRANCH=${GITHUB_REF_NAME}
@@ -129,7 +130,7 @@ jobs:
           body: |
             builder_sha=${{ needs.resolve.outputs.ref }}
             firmware_repo=litvinroman60-cpu/firmware
-            firmware_ref=master
+            firmware_ref=${{ github.ref_name == 'test/osd-control-apfpv' && 'test/osd-control-apfpv' || 'master' }}
             platform=ssc377d_apfpv
             one_off=false
           files: |
