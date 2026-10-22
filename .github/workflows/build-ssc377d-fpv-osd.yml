@@ -2,7 +2,7 @@ name: build-ssc377d-fpv-osd
 on:
   push:
     branches:
-      - master
+      - test/ssc377d-fpv-osd
 
 jobs:
   resolve:
@@ -17,7 +17,7 @@ jobs:
         run: |
           REF="${{ github.sha }}"
           SHORT="$(printf '%s' "$REF" | cut -c1-7)"
-          TAG="ssc377d-native-rgn-fix-${SHORT}-$(date -u +%Y%m%d%H%M%S)"
+          TAG="ssc377d-fpv-osd-${SHORT}-$(date -u +%Y%m%d%H%M%S)"
           echo "ref=$REF"               >> "$GITHUB_OUTPUT"
           echo "short_sha=$SHORT"       >> "$GITHUB_OUTPUT"
           echo "tag_name=$TAG"          >> "$GITHUB_OUTPUT"
