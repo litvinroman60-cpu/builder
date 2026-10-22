@@ -1,5 +1,8 @@
 name: build-ssc377d-fpv-classic
 on:
+  pull_request:
+    branches:
+      - master
   push:
     branches:
       - master
@@ -65,7 +68,7 @@ jobs:
           BUILD_SHA:      ${{ needs.resolve.outputs.ref }}
           BUILD_PLATFORM: ssc377d_fpv
           OPENIPC_FW_REPO: litvinroman60-cpu/firmware
-          OPENIPC_FW_REV: master
+          OPENIPC_FW_REV: ${{ github.event_name == 'pull_request' && 'work/ssc377d-fpv-classic-test' || 'master' }}
         run: |
           export GIT_HASH=$(git rev-parse --short ${GITHUB_SHA})
           export GIT_BRANCH=${GITHUB_REF_NAME}
@@ -121,7 +124,7 @@ jobs:
           fi
 
       - name: Upload firmware
-        if: env.NORFW || env.NANDFW
+        if: github.event_name == 'push' && (env.NORFW || env.NANDFW)
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.resolve.outputs.tag_name }}
