@@ -11,9 +11,11 @@ fw_setenv upgrade 'https://github.com/OpenIPC/builder/releases/download/latest/s
 cli -s .video0.enabled true
 cli -s .video0.size 1280x720
 cli -s .video0.fps 60
-cli -s .video0.bitrate 6144
 cli -s .video0.codec h264
 cli -s .video0.rcMode cbr
+# Keep encoder bitrate and keyframe interval user-configurable in Majestic.
+# Storage Saver forces long keyframe intervals, so leave it off.
+cli -s .video0.storageSaver off
 cli -s .fpv.enabled true
 cli -s .fpv.noiseLevel 0
 cli -s .video0.noiseLevel 0
